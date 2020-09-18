@@ -46,6 +46,7 @@ class CPU:
 
                     self.ram[address] = n
                     address += 1
+
         except FileNotFoundError:
             print(f"{sys.argv[0]}: {sys.argv[1]} not found")
             sys.exit(2)
@@ -61,12 +62,12 @@ class CPU:
             equal = self.fl[0]
             great = self.fl[1]
             less = self.fl[2]
-            #less than
+            # greater than
             if reg_a > reg_b:
                 equal = 0
                 less = 0
                 great = 1
-            # greater than 
+            # less than 
             elif reg_a < reg_b:
                 equal = 0
                 less = 1
@@ -78,7 +79,7 @@ class CPU:
                 great = 0
 
             # sets the EGL flags to either 0 (false) or 1 (true)
-            self.fl[:2] = [less, great, equal]
+            self.fl[:2] = [equal, great, less]
 
         else:
             raise Exception("Unsupported ALU operation")
@@ -109,7 +110,8 @@ class CPU:
         HLT = 0b00000001
         LDI = 0b10000010
         PRN = 0b01000111
-
+        MUL = 0b10100010 
+        
         # new sprint instructions
         CMP = 0b10100111
         JMP = 0b01010100
@@ -140,6 +142,12 @@ class CPU:
                 running = False
                 self.pc += 1
 
+            elif ir == MUL:
+                print(f"A: {operand_a}, B: {operand_b}")
+                # multiply the operands calling the operation from alu
+                self.alu('MUL', operand_a, operand_b)
+                self.pc += 3 # next instruction
+
             elif ir == CMP:
                 self.alu('CMP', operand_a, operand_b)
                 self.pc += 3
@@ -151,7 +159,7 @@ class CPU:
                 # set the PC to the address stored in the given register.
                 self.pc = add_jmp
             elif ir == JEQ:
-                if self.fl[2] == 1:
+                if self.fl[0] == 1:
                     # jump to the address stored in the given register
                     reg_jmp = operand_a
                     add_jmp = self.reg[reg_jmp]
@@ -160,7 +168,7 @@ class CPU:
                 else:
                     self.pc += 2
             elif ir == JNE:
-                if self.fl[2] == 0:
+                if self.fl[0] == 0:
                     # jump to the address stored in the given register
                     reg_jmp = operand_a
                     add_jmp = self.reg[reg_jmp]
